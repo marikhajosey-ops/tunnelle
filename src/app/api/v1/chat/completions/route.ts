@@ -68,6 +68,7 @@ export async function POST(req: Request) {
         headers: {
           'Authorization': `Bearer ${provider.apiKey}`,
           'Content-Type': 'application/json',
+          'Bypass-Tunnel-Reminder': 'true',
         },
         body: JSON.stringify(body),
       });
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
         headers: {
           'Authorization': `Bearer ${provider.apiKey}`,
           'Content-Type': 'application/json',
+          'Bypass-Tunnel-Reminder': 'true',
         },
         timeout: 60000,
       });

@@ -34,6 +34,7 @@ export async function refreshModels() {
       const response = await axios.get(`${provider.baseUrl}/models`, {
         headers: {
           Authorization: `Bearer ${provider.apiKey}`,
+          'Bypass-Tunnel-Reminder': 'true',
         },
         timeout: 10000,
       });
