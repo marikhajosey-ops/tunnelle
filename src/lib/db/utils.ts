@@ -31,32 +31,54 @@ export async function refreshModels() {
   for (const provider of allProviders) {
     try {
       console.log(`Refreshing models for provider: ${provider.name} (${provider.baseUrl})`);
-      const response = await axios.get(`${provider.baseUrl.replace(/\/$/, '')}/models`, {
-        headers: {
-          Authorization: `Bearer ${provider.apiKey}`,
-          'Bypass-Tunnel-Reminder': 'true',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/json',
-        },
-        timeout: 15000,
-      });
+      
+      const cleanBase = provider.baseUrl.replace(/\/$/, '');
+      const endpoints = [
+        cleanBase.endsWith('/models') ? cleanBase : `${cleanBase}/models`,
+        cleanBase.endsWith('/v1') ? `${cleanBase}/models` : `${cleanBase}/v1/models`,
+        cleanBase // Try the base URL directly as a last resort
+      ];
 
-      // Flexible parsing: check response.data.data (OpenAI style) or response.data (array style)
-      let upstreamModels = [];
-      if (Array.isArray(response.data.data)) {
-        upstreamModels = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        upstreamModels = response.data;
-      } else if (response.data && typeof response.data === 'object') {
-        // Handle cases where it might be an object with model IDs as keys
-        const keys = Object.keys(response.data);
-        if (keys.length > 0 && typeof response.data[keys[0]] === 'object') {
-          upstreamModels = keys.map(k => ({ id: k }));
+      let response = null;
+      let lastError = null;
+
+      // Try each potential endpoint
+      for (const url of [...new Set(endpoints)]) {
+        try {
+          console.log(`Trying model endpoint: ${url}`);
+          response = await axios.get(url, {
+            headers: {
+              'Authorization': `Bearer ${provider.apiKey}`,
+              'X-API-Key': provider.apiKey,
+              'Bypass-Tunnel-Reminder': 'true',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'application/json',
+            },
+            timeout: 10000,
+          });
+          if (response) break;
+        } catch (e: any) {
+          lastError = e;
+          continue;
         }
       }
 
+      if (!response) {
+        throw lastError || new Error('All model endpoints failed');
+      }
+
+      // Flexible parsing
+      let upstreamModels = [];
+      const data = response.data;
+      if (Array.isArray(data.data)) upstreamModels = data.data;
+      else if (Array.isArray(data)) upstreamModels = data;
+      else if (data && typeof data === 'object') {
+        const keys = Object.keys(data);
+        if (keys.length > 0) upstreamModels = keys.map(k => ({ id: k }));
+      }
+
       if (upstreamModels.length === 0) {
-        console.warn(`Provider ${provider.name} returned no models or unknown format:`, response.data);
+        console.warn(`Provider ${provider.name} returned empty model list`);
         continue;
       }
 
