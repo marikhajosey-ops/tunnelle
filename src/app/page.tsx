@@ -11,13 +11,24 @@ export default function LandingPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [password, setPassword] = useState('');
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'enyapeakshit') {
-      localStorage.setItem('admin_access', 'true');
-      router.push('/admin');
-    } else {
-      alert('Invalid admin password');
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('admin_access', 'true');
+        router.push('/admin');
+      } else {
+        alert('Invalid admin password');
+      }
+    } catch (err) {
+      alert('Connection error');
     }
   };
 

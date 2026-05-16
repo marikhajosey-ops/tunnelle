@@ -9,13 +9,26 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'enyapeakshit') {
-      localStorage.setItem('admin_access', 'true');
-      router.push('/admin');
-    } else {
-      setError('Invalid password');
+    setError('');
+    
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('admin_access', 'true');
+        router.push('/admin');
+      } else {
+        setError('Invalid password');
+      }
+    } catch (err) {
+      setError('Connection error');
     }
   };
 
