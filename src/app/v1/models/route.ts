@@ -1,39 +1,55 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { models } from '@/lib/db/schema';
+import { providers, models } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+export async function GET(req: Request) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return NextResponse.json({ error: 'Missing or invalid Authorization header' }, { 
+      status: 401,
+      headers: { 'Access-Control-Allow-Origin': '*' }
+    });
+  }
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: CORS_HEADERS });
+  const tunelleKey = authHeader.split(' ')[1].trim();
+  
+  // Find provider by Tunelle Key
+  const p = await db.select().from(providers).where(eq(providers.tunelleKey, tunelleKey)).limit(1);
+
+  if (p.length === 0) {
+    return NextResponse.json({ error: 'Invalid Tunelle Key' }, { 
+      status: 401,
+      headers: { 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  const provider = p[0];
+  
+  // Fetch models for this provider
+  const providerModels = await db.select().from(models).where(eq(models.providerId, provider.id));
+
+  return NextResponse.json({
+    object: 'list',
+    data: providerModels.map(m => ({
+      id: m.id,
+      object: 'model',
+      created: Date.now(),
+      owned_by: provider.name,
+    }))
+  }, {
+    headers: { 'Access-Control-Allow-Origin': '*' }
+  });
 }
 
-export async function GET(req: Request) {
-  try {
-    // Fetch all enabled models from the database
-    const dbModels = await db.select().from(models).where(eq(models.enabled, true));
-    
-    // De-duplicate model IDs for the response list
-    const uniqueModelIds = Array.from(new Set(dbModels.map(m => m.id)));
-    
-    return NextResponse.json({
-      object: "list",
-      data: uniqueModelIds.map((id: string) => ({
-        id: id,
-        object: "model",
-        created: Math.floor(Date.now() / 1000),
-        owned_by: "nanaone"
-      }))
-    }, { headers: CORS_HEADERS });
-  } catch (error: any) {
-    console.error('Models Fetch Error:', error.message);
-    return NextResponse.json({ error: 'Failed to fetch models' }, { status: 500, headers: CORS_HEADERS });
-  }
+export async function OPTIONS() {
+  return NextResponse.json({}, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    }
+  });
 }
