@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { providers } from '@/lib/db/schema';
+import { providers, models, usageLogs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,6 +18,12 @@ export async function POST(req: Request) {
   try {
     if (action === 'delete') {
       if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
+      
+      // Clean up dependent records first to avoid foreign key violations
+      await db.delete(usageLogs).where(eq(usageLogs.providerId, id));
+      await db.delete(models).where(eq(models.providerId, id));
+      
+      // Now delete the provider
       await db.delete(providers).where(eq(providers.id, id));
       return NextResponse.json({ success: true });
     }
