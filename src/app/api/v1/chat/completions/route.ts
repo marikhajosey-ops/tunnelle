@@ -69,6 +69,8 @@ export async function POST(req: Request) {
           'Authorization': `Bearer ${provider.apiKey}`,
           'Content-Type': 'application/json',
           'Bypass-Tunnel-Reminder': 'true',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/event-stream',
         },
         body: JSON.stringify(body),
       });
@@ -93,6 +95,8 @@ export async function POST(req: Request) {
           'Authorization': `Bearer ${provider.apiKey}`,
           'Content-Type': 'application/json',
           'Bypass-Tunnel-Reminder': 'true',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json',
         },
         timeout: 60000,
       });
