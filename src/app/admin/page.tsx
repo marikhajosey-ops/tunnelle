@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings, RefreshCw, Save, ArrowLeft, Globe, Key, Zap, Users, ShieldOff, ShieldCheck } from 'lucide-react';
+import { Settings, RefreshCw, Save, ArrowLeft, Globe, Key, Zap, Users, ShieldOff, ShieldCheck, Plus } from 'lucide-react';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -17,6 +17,7 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userFilter, setUserFilter] = useState<'all' | 'flagged' | 'banned'>('all');
   const [bannedIPs, setBannedIPs] = useState<any[]>([]);
+  const [manualModels, setManualModels] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const access = localStorage.getItem('admin_access');
@@ -149,6 +150,21 @@ export default function AdminPage() {
     alert('Models refreshed from all enabled providers!');
   };
 
+  const handleAddManualModel = async (providerId: string) => {
+    const modelId = manualModels[providerId];
+    if (!modelId) return;
+    
+    setSaving(true);
+    await fetch('/api/admin/models/manual', {
+      method: 'POST',
+      body: JSON.stringify({ modelId, providerId }),
+    });
+    
+    setManualModels({...manualModels, [providerId]: ''});
+    setSaving(false);
+    alert(`Model "${modelId}" added manually!`);
+  };
+
   return (
     <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px' }}>
       <button 
@@ -203,6 +219,23 @@ export default function AdminPage() {
                       <span style={{ color: 'var(--text-muted)' }}>RPD:</span>
                       <span>{p.rpd}</span>
                     </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <input 
+                      className="input-field" 
+                      style={{ flex: 1, fontSize: '0.8rem', padding: '6px 10px' }}
+                      placeholder="Add model manually (e.g. gpt-4o)"
+                      value={manualModels[p.id] || ''}
+                      onChange={e => setManualModels({...manualModels, [p.id]: e.target.value})}
+                    />
+                    <button 
+                      className="btn-primary" 
+                      style={{ fontSize: '0.75rem', padding: '6px 12px', whiteSpace: 'nowrap' }}
+                      onClick={() => handleAddManualModel(p.id)}
+                      disabled={saving}
+                    >
+                      <Plus size={14} /> Add
+                    </button>
                   </div>
                 </div>
               </div>

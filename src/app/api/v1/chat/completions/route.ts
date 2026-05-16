@@ -66,7 +66,9 @@ export async function POST(req: Request) {
       const response = await fetch(upstreamUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${provider.apiKey}`,
+          'Authorization': provider.apiKey.startsWith('Bearer ') ? provider.apiKey : `Bearer ${provider.apiKey}`,
+          'X-API-Key': provider.apiKey,
+          'api-key': provider.apiKey,
           'Content-Type': 'application/json',
           'Bypass-Tunnel-Reminder': 'true',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -92,7 +94,9 @@ export async function POST(req: Request) {
     } else {
       const response = await axios.post(upstreamUrl, body, {
         headers: {
-          'Authorization': `Bearer ${provider.apiKey}`,
+          'Authorization': provider.apiKey.startsWith('Bearer ') ? provider.apiKey : `Bearer ${provider.apiKey}`,
+          'X-API-Key': provider.apiKey,
+          'api-key': provider.apiKey,
           'Content-Type': 'application/json',
           'Bypass-Tunnel-Reminder': 'true',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
