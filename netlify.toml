@@ -2,12 +2,8 @@
   command = "npm run build"
   publish = ".next"
 
-[functions]
-  node_runtime = "nodejs20.x"
-  included_files = ["src/lib/db/schema.ts"]
+[build.environment]
+  NODE_VERSION = "20"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[npx.localtunnel]
-  port = 1430
