@@ -3,7 +3,12 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const { password } = await req.json();
-    const correctPassword = process.env.ADMIN_PASSWORD || 'enyapeakshit';
+    const correctPassword = process.env.ADMIN_PASSWORD;
+
+    if (!correctPassword) {
+      console.error('ADMIN_PASSWORD environment variable is not set!');
+      return NextResponse.json({ success: false, error: 'Server configuration error' }, { status: 500 });
+    }
 
     if (password === correctPassword) {
       return NextResponse.json({ success: true });
