@@ -31,33 +31,50 @@ export async function refreshModels() {
   for (const provider of allProviders) {
     try {
       console.log(`Refreshing models for provider: ${provider.name} (${provider.baseUrl})`);
-      const response = await axios.get(`${provider.baseUrl}/models`, {
+      const response = await axios.get(`${provider.baseUrl.replace(/\/$/, '')}/models`, {
         headers: {
           Authorization: `Bearer ${provider.apiKey}`,
           'Bypass-Tunnel-Reminder': 'true',
         },
-        timeout: 10000,
+        timeout: 15000,
       });
 
-      const upstreamModels = response.data.data;
-      if (!Array.isArray(upstreamModels)) {
-        console.warn(`Provider ${provider.name} returned invalid models data`);
+      // Flexible parsing: check response.data.data (OpenAI style) or response.data (array style)
+      let upstreamModels = [];
+      if (Array.isArray(response.data.data)) {
+        upstreamModels = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        upstreamModels = response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        // Handle cases where it might be an object with model IDs as keys
+        const keys = Object.keys(response.data);
+        if (keys.length > 0 && typeof response.data[keys[0]] === 'object') {
+          upstreamModels = keys.map(k => ({ id: k }));
+        }
+      }
+
+      if (upstreamModels.length === 0) {
+        console.warn(`Provider ${provider.name} returned no models or unknown format:`, response.data);
         continue;
       }
 
       for (const m of upstreamModels) {
+        const modelId = m.id || m.name || (typeof m === 'string' ? m : null);
+        if (!modelId) continue;
+
         await db.insert(models).values({
-          id: m.id,
-          name: m.id,
+          id: modelId,
+          name: modelId,
           providerId: provider.id,
         }).onConflictDoUpdate({
           target: [models.id, models.providerId],
-          set: { name: m.id },
+          set: { name: modelId },
         });
       }
       console.log(`Successfully refreshed ${upstreamModels.length} models for ${provider.name}`);
     } catch (error: any) {
-      console.error(`Failed to refresh models for provider ${provider.name}:`, error.message);
+      const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+      console.error(`Failed to refresh models for provider ${provider.name}:`, errorMsg);
     }
   }
 }
