@@ -4,15 +4,19 @@ import axios from 'axios';
 import { eq } from 'drizzle-orm';
 
 export async function initDatabase() {
-  // Simple check to see if settings exist, if not, create default from .env
-  const existingSettings = await db.select().from(settings).limit(1);
-  if (existingSettings.length === 0) {
-    await db.insert(settings).values({
-      id: 1,
-      upstreamEndpoint: process.env.UPSTREAM_API_ENDPOINT,
-      upstreamKey: process.env.UPSTREAM_API_KEY,
-      adminPassword: process.env.ADMIN_PASSWORD,
-    });
+  try {
+    // Simple check to see if settings exist, if not, create default from .env
+    const existingSettings = await db.select().from(settings).limit(1);
+    if (existingSettings.length === 0) {
+      await db.insert(settings).values({
+        id: 1,
+        upstreamEndpoint: process.env.UPSTREAM_API_ENDPOINT,
+        upstreamKey: process.env.UPSTREAM_API_KEY,
+        adminPassword: process.env.ADMIN_PASSWORD,
+      });
+    }
+  } catch (error: any) {
+    console.warn('initDatabase skipped (likely missing tables or connection during build):', error.message);
   }
 }
 
