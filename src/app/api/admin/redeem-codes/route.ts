@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Valid amount is required' }, { status: 400 });
     }
 
-    const code = customCode ? customCode.toUpperCase() : `NANA-${uuidv4().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+    const code = customCode ? customCode.toUpperCase() : `LIZ-${uuidv4().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
     
     // Check if code already exists
     const existing = await db.select().from(redeemCodes).where(eq(redeemCodes.code, code)).limit(1);

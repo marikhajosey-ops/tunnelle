@@ -107,7 +107,7 @@ export default function Dashboard() {
             ) : (
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Your NanaOne API Key</label>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Your LizRouter API Key</label>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input 
                       className="input-field" 
@@ -139,7 +139,7 @@ export default function Dashboard() {
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input 
                       className="input-field" 
-                      placeholder="Enter NANA-XXXX..." 
+                      placeholder="Enter LIZ-XXXX..." 
                       value={inputKey}
                       onChange={(e) => setInputKey(e.target.value)}
                     />

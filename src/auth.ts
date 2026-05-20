@@ -65,7 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async createUser({ user }: { user: any }) {
       try {
         // Initialize premium set for new OAuth users
-        const apiKey = `NanaOne-${uuidv4().replace(/-/g, '').slice(0, 32)}`;
+        const apiKey = `LizRouter-${uuidv4().replace(/-/g, '').slice(0, 32)}`;
         await db.update(users).set({
           apiKey: apiKey,
           balance: 20.0,

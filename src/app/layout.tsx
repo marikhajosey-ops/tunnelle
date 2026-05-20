@@ -3,7 +3,7 @@ import "./globals.css";
 import { initDatabase } from "@/lib/db/utils";
 
 export const metadata: Metadata = {
-  title: "NanaOne | Premium AI Gateway",
+  title: "LizRouter | Premium AI Gateway",
   description: "Next-generation AI gateway with individual API keys and daily credits.",
 };
 

@@ -535,7 +535,7 @@ export default function AdminPage() {
         <h4 style={{ marginBottom: '12px', fontSize: '0.9rem' }}>System Info</h4>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
           <span>Version</span>
-          <span>NanaOne v1.0.0</span>
+          <span>LizRouter v1.0.0</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: '8px' }}>
           <span>Pricing</span>
