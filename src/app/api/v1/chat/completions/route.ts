@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { providers, usageLogs } from '@/lib/db/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import axios from 'axios';
+import { moderateMessages, buildRejectionResponse } from '@/lib/moderation';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,6 +59,24 @@ export async function POST(req: Request) {
   // 3. Proxy the request
   const body = await req.json();
   const isStreaming = body.stream === true;
+
+  // ── CSAM Moderation ──────────────────────────────────────────────────────
+  const moderationKey = process.env.OPENAI_MODERATION_KEY ?? process.env.OPENAI_API_KEY ?? '';
+  if (moderationKey) {
+    try {
+      const mod = await moderateMessages(body.messages ?? [], moderationKey);
+      if (mod.blocked) {
+        console.warn(`[MODERATION] CSAM block — provider: ${provider.name}, reason: ${mod.reason}`);
+        return buildRejectionResponse(mod.reason);
+      }
+    } catch (err: any) {
+      console.error('[MODERATION] Check failed, rejecting request:', err.message);
+      return buildRejectionResponse();
+    }
+  } else {
+    console.warn('[MODERATION] No OPENAI_MODERATION_KEY set — CSAM moderation is disabled!');
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   try {
     const upstreamUrl = `${provider.baseUrl.replace(/\/$/, '')}/chat/completions`;
