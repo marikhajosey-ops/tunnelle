@@ -70,8 +70,8 @@ export async function POST(req: Request) {
         return buildRejectionResponse(mod.reason);
       }
     } catch (err: any) {
-      console.error('[MODERATION] Check failed, rejecting request:', err.message);
-      return buildRejectionResponse();
+      // Fail-open: moderation API errors should NOT block legitimate users.
+      console.error('[MODERATION] Check failed, failing open:', err.message);
     }
   } else {
     console.warn('[MODERATION] No OPENAI_MODERATION_KEY set — CSAM moderation is disabled!');

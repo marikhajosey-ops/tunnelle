@@ -101,15 +101,25 @@ export async function moderateMessages(
   if (!result) throw new Error('Unexpected moderation response shape');
 
   const categories: Record<string, boolean> = result.categories ?? {};
+  const scores: Record<string, number> = result.category_scores ?? {};
+
+  // Always log the full moderation result so we can see what's firing
+  console.log('[MODERATION] categories:', JSON.stringify(categories));
+  console.log('[MODERATION] scores:', JSON.stringify(scores));
 
   // Check if any CSAM flag is raised
   const csamFlagged = CSAM_CATEGORIES.some((key) => categories[key] === true);
 
-  if (!csamFlagged) return { blocked: false };
+  if (!csamFlagged) {
+    console.log('[MODERATION] no CSAM flag — allowing');
+    return { blocked: false };
+  }
 
-  // Flag was raised — but omni-moderation over-fires on adult RP.
-  // Only block if the text also contains explicit minor-related language.
-  if (!containsMinorKeywords(text)) {
+  // Flag was raised — confirm with keyword check before blocking
+  const hasMinorKeyword = containsMinorKeywords(text);
+  console.log('[MODERATION] CSAM flag raised, minor keyword match:', hasMinorKeyword);
+
+  if (!hasMinorKeyword) {
     return { blocked: false };
   }
 
