@@ -93,7 +93,9 @@ export async function moderateMessages(
     throw new Error('Unexpected moderation response shape');
   }
 
-  // Check only CSAM-related category flags
+  // Only block if OpenAI explicitly raised a CSAM flag.
+  // We do NOT use score thresholds — adult NSFW content can produce elevated
+  // sexual/minors scores without the flag being set, which causes false positives.
   const categories: Record<string, boolean> = result.categories ?? {};
 
   for (const key of CSAM_CATEGORIES) {
@@ -101,18 +103,6 @@ export async function moderateMessages(
       return {
         blocked: true,
         reason: `Content flagged: ${key}`,
-      };
-    }
-  }
-
-  // Also check category_scores for any CSAM key above a tight threshold (0.5)
-  // This catches cases where the flag is false but the score is high
-  const scores: Record<string, number> = result.category_scores ?? {};
-  for (const key of CSAM_CATEGORIES) {
-    if ((scores[key] ?? 0) >= 0.5) {
-      return {
-        blocked: true,
-        reason: `Content score exceeded threshold for: ${key} (score: ${scores[key].toFixed(3)})`,
       };
     }
   }
